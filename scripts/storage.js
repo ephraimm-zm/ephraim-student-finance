@@ -1,12 +1,8 @@
-// scripts/storage.js
-const KEY = 'finance:data';
+export const KEY = 'finance:data';
 
 export const load = () => {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) || '[]');
-  } catch {
-    return [];
-  }
+  const data = localStorage.getItem(KEY);
+  return data ? JSON.parse(data) : [];
 };
 
 export const save = (data) => {
