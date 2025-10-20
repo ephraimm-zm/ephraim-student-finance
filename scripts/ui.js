@@ -1,167 +1,110 @@
-// scripts/ui.js
-import { state, addTransaction, editTransaction, deleteTransaction } from './state.js';
-import { validateTransaction } from './validators.js';
-import { filterTransactions, highlight } from './search.js';
+import { transactions, updateState, settings } from './state.js';
+import { validators } from './validators.js';
+import { compileRegex, highlight } from './search.js';
 
-const form = document.getElementById('transaction-form');
-const tbody = document.getElementById('records-body');
-const searchInput = document.getElementById('search');
-const totalRecordsEl = document.getElementById('total-records');
-const totalAmountEl = document.getElementById('total-amount');
-const topCategoryEl = document.getElementById('top-category');
-const capRemainingEl = document.getElementById('cap-remaining');
-const capInput = document.getElementById('cap');
-const currencySelect = document.getElementById('currency');
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('transaction-form');
+  const tbody = document.getElementById('records-body');
+  const totalRecords = document.getElementById('total-records');
+  const totalAmount = document.getElementById('total-amount');
+  const topCategory = document.getElementById('top-category');
+  const capRemaining = document.getElementById('cap-remaining');
+  const searchInput = document.getElementById('search');
 
-let editingId = null;
+  const render = () => {
+    tbody.innerHTML = '';
+    let sum = 0;
+    let categoryCount = {};
 
-// --- Render Transactions Table ---
-export const renderTransactions = (pattern = '') => {
-  const list = pattern ? filterTransactions(pattern) : state.transactions;
-  tbody.innerHTML = '';
+    transactions.forEach(tx => {
+      sum += parseFloat(tx.amount);
+      categoryCount[tx.category] = (categoryCount[tx.category] || 0) + 1;
 
-  list.forEach(tx => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${highlight(tx.date, compileRegex(pattern))}</td>
-      <td>${highlight(tx.description, compileRegex(pattern))}</td>
-      <td>${highlight(tx.category, compileRegex(pattern))}</td>
-      <td>${highlight(tx.amount.toFixed(2), compileRegex(pattern))}</td>
-      <td>
-        <button class="edit" data-id="${tx.id}">Edit</button>
-        <button class="delete" data-id="${tx.id}">Delete</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-};
-
-// --- Render Dashboard Stats ---
-export const renderStats = () => {
-  const total = state.transactions.reduce((sum, t) => sum + Number(t.amount), 0);
-  totalRecordsEl.textContent = state.transactions.length;
-  totalAmountEl.textContent = total.toFixed(2);
-
-  // Top category
-  const counts = {};
-  state.transactions.forEach(t => counts[t.category] = (counts[t.category] || 0) + 1);
-  const top = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b, 'N/A');
-  topCategoryEl.textContent = top;
-
-  // Cap remaining
-  const cap = Number(capInput.value) || 0;
-  const remaining = cap - total;
-  capRemainingEl.textContent = remaining.toFixed(2);
-};
-
-// --- Form Submit ---
-form.addEventListener('submit', e => {
-  e.preventDefault();
-
-  const data = {
-    description: form.description.value.trim(),
-    amount: form.amount.value,
-    date: form.date.value,
-    category: form.category.value
-  };
-
-  const errors = validateTransaction(data);
-  // Clear previous errors
-  form.querySelectorAll('.error').forEach(el => el.textContent = '');
-  if (Object.keys(errors).length > 0) {
-    Object.keys(errors).forEach(key => {
-      const errorEl = form.querySelector(`.error-${key}`);
-      if (errorEl) errorEl.textContent = errors[key];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${tx.date}</td>
+        <td>${tx.description}</td>
+        <td>${tx.category}</td>
+        <td>${parseFloat(tx.amount).toFixed(2)}</td>
+        <td>
+          <button class="edit" data-id="${tx.id}">Edit</button>
+          <button class="delete" data-id="${tx.id}">Delete</button>
+        </td>`;
+      tbody.appendChild(tr);
     });
-    return;
-  }
 
-  if (editingId) {
-    editTransaction(editingId, data);
-    editingId = null;
-  } else {
-    addTransaction(data);
-  }
-
-  form.reset();
-  renderTransactions();
-  renderStats();
-});
-
-// --- Edit / Delete Buttons ---
-tbody.addEventListener('click', e => {
-  if (e.target.classList.contains('edit')) {
-    const id = e.target.dataset.id;
-    const tx = state.transactions.find(t => t.id === id);
-    if (!tx) return;
-    editingId = id;
-    form.description.value = tx.description;
-    form.amount.value = tx.amount;
-    form.date.value = tx.date;
-    form.category.value = tx.category;
-  } else if (e.target.classList.contains('delete')) {
-    const id = e.target.dataset.id;
-    if (confirm('Delete this transaction?')) {
-      deleteTransaction(id);
-      renderTransactions();
-      renderStats();
-    }
-  }
-});
-
-// --- Search ---
-searchInput.addEventListener('input', e => {
-  renderTransactions(e.target.value);
-});
-
-// --- Settings ---
-document.getElementById('settings-form').addEventListener('submit', e => {
-  e.preventDefault();
-  state.settings.cap = Number(capInput.value) || 0;
-  state.settings.currency = currencySelect.value;
-  renderStats();
-});
-
-// --- Import / Export JSON ---
-document.getElementById('export-json').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(state.transactions, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'transactions.json';
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-document.getElementById('import-json').addEventListener('click', () => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'application/json';
-  input.onchange = e => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const imported = JSON.parse(reader.result);
-        if (Array.isArray(imported)) {
-          imported.forEach(tx => {
-            if (!tx.id) tx.id = 'txn_' + Date.now() + Math.random();
-            state.transactions.push(tx);
-          });
-          renderTransactions();
-          renderStats();
-        } else {
-          alert('Invalid JSON format.');
-        }
-      } catch {
-        alert('Error parsing JSON.');
-      }
-    };
-    reader.readAsText(file);
+    totalRecords.textContent = transactions.length;
+    totalAmount.textContent = sum.toFixed(2);
+    topCategory.textContent = Object.keys(categoryCount).sort((a,b)=>categoryCount[b]-categoryCount[a])[0] || 'N/A';
+    capRemaining.textContent = (settings.cap - sum).toFixed(2);
+    updateState();
   };
-  input.click();
-});
 
-// --- Initial render ---
-renderTransactions();
-renderStats();
+  render();
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const description = document.getElementById('description').value.trim();
+    const amount = document.getElementById('amount').value.trim();
+    const category = document.getElementById('category').value.trim();
+    const date = document.getElementById('date').value.trim();
+
+    let valid = true;
+    if (!validators.description(description)) { document.querySelector('.error-description').textContent = 'Invalid'; valid=false;} else {document.querySelector('.error-description').textContent='';}
+    if (!validators.amount(amount)) { document.querySelector('.error-amount').textContent='Invalid'; valid=false;} else {document.querySelector('.error-amount').textContent='';}
+    if (!validators.category(category)) { document.querySelector('.error-category').textContent='Invalid'; valid=false;} else {document.querySelector('.error-category').textContent='';}
+    if (!validators.date(date)) { document.querySelector('.error-date').textContent='Invalid'; valid=false;} else {document.querySelector('.error-date').textContent='';}
+
+    if (!valid) return;
+
+    const newTx = {
+      id: 'txn_' + Date.now(),
+      description, amount: parseFloat(amount), category, date,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    transactions.push(newTx);
+    render();
+    form.reset();
+  });
+
+  // Delete & Edit
+  tbody.addEventListener('click', e => {
+    if(e.target.classList.contains('delete')){
+      const id = e.target.dataset.id;
+      const idx = transactions.findIndex(t=>t.id===id);
+      if(idx>-1){ transactions.splice(idx,1); render(); }
+    } else if(e.target.classList.contains('edit')){
+      const id = e.target.dataset.id;
+      const tx = transactions.find(t=>t.id===id);
+      if(tx){
+        document.getElementById('description').value = tx.description;
+        document.getElementById('amount').value = tx.amount;
+        document.getElementById('category').value = tx.category;
+        document.getElementById('date').value = tx.date;
+      }
+    }
+  });
+
+  // Live search
+  searchInput.addEventListener('input', e => {
+    const pattern = compileRegex(e.target.value);
+    tbody.innerHTML = '';
+    transactions.forEach(tx=>{
+      const matches = pattern ? [tx.description, tx.category, tx.date, tx.amount.toString()].some(f=>pattern.test(f)) : true;
+      if(matches){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${highlight(tx.date, pattern)}</td>
+          <td>${highlight(tx.description, pattern)}</td>
+          <td>${highlight(tx.category, pattern)}</td>
+          <td>${highlight(tx.amount.toFixed(2), pattern)}</td>
+          <td>
+            <button class="edit" data-id="${tx.id}">Edit</button>
+            <button class="delete" data-id="${tx.id}">Delete</button>
+          </td>`;
+        tbody.appendChild(tr);
+      }
+    });
+  });
+});
