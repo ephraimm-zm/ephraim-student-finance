@@ -108,3 +108,61 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+// Settings form
+const settingsForm = document.getElementById('settings-form');
+settingsForm.cap.value = settings.cap || 0;
+settingsForm.currency.value = settings.currency;
+
+settingsForm.addEventListener('submit', e => {
+  e.preventDefault();
+  settings.cap = parseFloat(settingsForm.cap.value) || 0;
+  settings.currency = settingsForm.currency.value;
+  saveSettings();
+  render(); // Update dashboard
+});
+
+// Import / Export JSON
+const importBtn = document.getElementById('import-json');
+const exportBtn = document.getElementById('export-json');
+
+importBtn.addEventListener('click', async () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!Array.isArray(data)) throw new Error('Invalid JSON structure');
+        data.forEach(tx=>{
+          if(!tx.id) tx.id = 'txn_'+Date.now();
+        });
+        transactions.push(...data);
+        updateState();
+        render();
+        alert('Import successful!');
+      } catch(err){
+        alert('Failed to import JSON: '+err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+});
+
+exportBtn.addEventListener('click', () => {
+  const dataStr = JSON.stringify(transactions, null, 2);
+  const blob = new Blob([dataStr], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'transactions.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+
