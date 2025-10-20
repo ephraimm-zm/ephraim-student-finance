@@ -1,0 +1,6 @@
+[
+  {"id":"txn_1","description":"Lunch at cafeteria","amount":12.5,"category":"Food","date":"2025-09-25","createdAt":"2025-09-25T10:00:00","updatedAt":"2025-09-25T10:00:00"},
+  {"id":"txn_2","description":"Chemistry textbook","amount":89.99,"category":"Books","date":"2025-09-23","createdAt":"2025-09-23T12:00:00","updatedAt":"2025-09-23T12:00:00"},
+  {"id":"txn_3","description":"Bus pass","amount":45,"category":"Transport","date":"2025-09-20","createdAt":"2025-09-20T08:00:00","updatedAt":"2025-09-20T08:00:00"},
+  {"id":"txn_4","description":"Coffee with friends","amount":8.75,"category":"Entertainment","date":"2025-09-28","createdAt":"2025-09-28T09:00:00","updatedAt":"2025-09-28T09:00:00"}
+]
