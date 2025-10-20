@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Finance Tracker</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+  <!-- Skip link for accessibility -->
+  <a href="#main-content" class="skip-link">Skip to content</a>
+
+  <!-- Header -->
+  <header>
+    <h1>Student Finance Tracker</h1>
+    <p>Track your budgets, transactions, and spending trends</p>
+  </header>
+
+  <!-- Navigation -->
+  <nav>
+    <ul>
+      <li><a href="#dashboard">Dashboard</a></li>
+      <li><a href="#records">Transactions</a></li>
+      <li><a href="#add-form">Add/Edit</a></li>
+      <li><a href="#settings">Settings</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main id="main-content">
+
+    <!-- Dashboard / Stats -->
+    <section id="dashboard">
+      <h2>Dashboard</h2>
+      <div class="stats">
+        <div>Total Transactions: <span id="total-records">0</span></div>
+        <div>Total Amount: <span id="total-amount">0.00</span></div>
+        <div>Top Category: <span id="top-category">N/A</span></div>
+        <div>Cap Remaining: <span id="cap-remaining">0.00</span></div>
+        <canvas id="trend-chart" aria-label="Last 7 days spending trend"></canvas>
+      </div>
+    </section>
+
+    <!-- Records Table -->
+    <section id="records">
+      <h2>Transactions</h2>
+      <input type="text" id="search" placeholder="Search / Regex">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="records-body">
+          <!-- Records rendered here via JS -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Add / Edit Form -->
+    <section id="add-form">
+      <h2>Add / Edit Transaction</h2>
+      <form id="transaction-form">
+        <label for="description">Description</label>
+        <input type="text" id="description" name="description" required>
+        <span class="error error-description" aria-live="polite"></span>
+
+        <label for="amount">Amount</label>
+        <input type="number" step="0.01" id="amount" name="amount" required>
+        <span class="error error-amount" aria-live="polite"></span>
+
+        <label for="category">Category</label>
+        <select id="category" name="category" required>
+          <option>Food</option>
+          <option>Books</option>
+          <option>Transport</option>
+          <option>Entertainment</option>
+          <option>Fees</option>
+          <option>Other</option>
+        </select>
+        <span class="error error-category" aria-live="polite"></span>
+
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date" required>
+        <span class="error error-date" aria-live="polite"></span>
+
+        <button type="submit">Save</button>
+      </form>
+    </section>
+
+    <!-- Settings -->
+    <section id="settings">
+      <h2>Settings</h2>
+      <form id="settings-form">
+        <label for="cap">Set Monthly Cap</label>
+        <input type="number" id="cap" step="0.01">
+
+        <label for="currency">Currency</label>
+        <select id="currency">
+          <option value="ZMW">ZMW</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+        </select>
+
+        <button type="submit">Save Settings</button>
+      </form>
+
+      <!-- Import / Export JSON -->
+      <div id="import-export">
+        <button id="import-json">Import JSON</button>
+        <button id="export-json">Export JSON</button>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about">
+      <h2>About</h2>
+      <p>Purpose: Track student spending and budgets.</p>
+      <p>Contact: <a href="mailto:youremail@example.com">Email</a> | <a href="https://github.com/yourusername" target="_blank">GitHub</a></p>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 Student Finance Tracker</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="scripts/ui.js"></script>
+</body>
+</html>
