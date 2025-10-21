@@ -1,3 +1,5 @@
+/* main.css - Responsive Student Finance Tracker */
+
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -188,17 +190,3 @@ footer {
     font-size: 0.9rem;
   }
 }
-
-/* Tighter spacing between sections */
-section {
-  margin-bottom: 1.2rem;
-}
-
-#dashboard {
-  margin-bottom: 0.8rem; /* reduce bottom space of dashboard specifically */
-}
-
-#records {
-  margin-top: 0; /* prevent extra space stacking with dashboard margin */
-}
-
