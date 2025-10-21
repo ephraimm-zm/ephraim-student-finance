@@ -68,7 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
     form.reset();
   });
 
-  // Delete & Edit
   tbody.addEventListener('click', e => {
     if(e.target.classList.contains('delete')){
       const id = e.target.dataset.id;
@@ -86,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Live search
+
   searchInput.addEventListener('input', e => {
     const pattern = compileRegex(e.target.value);
     tbody.innerHTML = '';
@@ -109,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Settings form
 const settingsForm = document.getElementById('settings-form');
 settingsForm.cap.value = settings.cap || 0;
 settingsForm.currency.value = settings.currency;
@@ -122,7 +120,6 @@ settingsForm.addEventListener('submit', e => {
   render(); // Update dashboard
 });
 
-// Import / Export JSON
 const importBtn = document.getElementById('import-json');
 const exportBtn = document.getElementById('export-json');
 
@@ -164,5 +161,6 @@ exportBtn.addEventListener('click', () => {
   a.click();
   URL.revokeObjectURL(url);
 });
+
 
 
