@@ -57,7 +57,46 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   render();
+  const ctx = document.getElementById('trend-chart').getContext('2d');
+let trendChart = null;
 
+const updateChart = () => {
+  // Get last 7 days
+  const last7Days = Array.from({length:7}, (_,i)=>{
+    const d = new Date();
+    d.setDate(d.getDate() - (6-i));
+    return d.toISOString().split('T')[0];
+  });
+
+  const amounts = last7Days.map(day=>{
+    return transactions
+      .filter(tx => tx.date === day)
+      .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+  });
+
+  if(trendChart) trendChart.destroy(); // clear previous chart
+
+  trendChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: last7Days,
+      datasets: [{
+        label: 'Spending per Day',
+        data: amounts,
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+};
+  
   // Transaction Form Submit
   form.addEventListener('submit', e => {
     e.preventDefault();
@@ -180,3 +219,4 @@ document.addEventListener('DOMContentLoaded', () => {
     URL.revokeObjectURL(url);
   });
 });
+
