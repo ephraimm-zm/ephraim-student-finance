@@ -1,29 +1,187 @@
-body {
-  font-family: monospace;
-  background: #0d1117;
-  color: #c9d1d9;
-  margin: 0;
-  padding: 0;
+/* ================================
+   VIM-INSPIRED MOBILE-FIRST THEME
+   ================================ */
+
+:root {
+  --bg: #0d1117;
+  --fg: #c9d1d9;
+  --accent: #58a6ff;
+  --border: #30363d;
+  --error: #f85149;
+  --hover-bg: #21262d;
+  --alt-bg: #161b22;
+  --font-body: monospace;
 }
 
-a { color: #58a6ff; text-decoration: none; }
-a:focus { outline: 2px solid #58a6ff; }
+* {
+  box-sizing: border-box;
+}
 
-header, footer, section, nav, main { padding: 1rem; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--fg);
+  margin: 0;
+  padding: 0 1rem;
+  line-height: 1.6;
+}
 
-header { border-bottom: 2px solid #30363d; }
-nav ul { display: flex; gap: 1rem; list-style: none; padding: 0; }
-nav a:hover, nav a:focus { text-decoration: underline; }
+/* Links */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+a:hover, a:focus {
+  text-decoration: underline;
+  outline: none;
+}
 
-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-th, td { border: 1px solid #30363d; padding: 0.5rem; text-align: left; }
-tr:nth-child(even) { background: #161b22; }
-tr:hover { background: #21262d; }
+/* Accessibility */
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: -999px;
+}
+.skip-link:focus {
+  left: 0;
+  top: 0;
+  background: var(--accent);
+  color: var(--bg);
+  padding: 0.75rem 1rem;
+  z-index: 1000;
+}
 
-input, select, button { background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; padding: 0.25rem 0.5rem; }
-input:focus, select:focus, button:focus { outline: 2px solid #58a6ff; }
+/* Layout */
+header, footer, main, section, nav {
+  padding: 1rem 0;
+}
+header {
+  border-bottom: 2px solid var(--border);
+}
+footer {
+  border-top: 2px solid var(--border);
+  font-size: 0.9rem;
+  text-align: center;
+}
 
-.error { color: #f85149; font-size: 0.85rem; }
+/* Navigation */
+nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+nav a {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+}
+nav a:hover, nav a:focus {
+  background: var(--hover-bg);
+}
 
-.skip-link { position: absolute; left: -999px; top: -999px; }
-.skip-link:focus { left: 0; top: 0; background: #58a6ff; color: #0d1117; padding: 0.5rem; }
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  overflow-x: auto;
+  display: block;
+}
+th, td {
+  border: 1px solid var(--border);
+  padding: 0.6rem;
+  text-align: left;
+  white-space: nowrap;
+}
+tr:nth-child(even) {
+  background: var(--alt-bg);
+}
+tr:hover {
+  background: var(--hover-bg);
+}
+
+/* Forms */
+input, select, button {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+}
+button {
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+button:hover {
+  background: #79c0ff;
+}
+input:focus, select:focus, button:focus {
+  outline: 2px solid var(--accent);
+}
+
+/* Error message */
+.error {
+  color: var(--error);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+/* Tablet and up */
+@media (min-width: 600px) {
+  nav ul {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+
+  body {
+    padding: 0 2rem;
+  }
+
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  th, td {
+    font-size: 1rem;
+  }
+}
+
+/* Desktop and up */
+@media (min-width: 992px) {
+  nav ul {
+    gap: 1.5rem;
+  }
+
+  body {
+    padding: 0 3rem;
+  }
+
+  header, footer {
+    padding: 1rem 0;
+  }
+}
+
+/* ================================
+   DESIGN NOTE
+   ================================
+   Inspired by Vim's minimalist power,
+   this theme embraces the mindset of a
+   backend developer — structured, efficient,
+   and distraction-free. The monochrome palette
+   mirrors a coder’s terminal, while accents of
+   electric blue evoke focus and logic. The layout
+   starts mobile-first: simple, readable, and
+   performance-oriented — like clean, optimized
+   code. Think of it as data structures meeting design.
+*/
