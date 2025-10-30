@@ -356,6 +356,388 @@ new Chart(ctx, {
     }
   }
 });
-</script>
+</script
+  // ui.js - robust app script (non-module). Put this after Chart.js and DOM.
+(function () {
+  // ======= Constants & Helpers =======
+  const LS_KEYS = { TX: 'sft_transactions_v1', SETTINGS: 'sft_settings_v1' };
+
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+  const safeParse = (s, fallback) => {
+    try { return JSON.parse(s || 'null') || fallback; } catch (e) { return fallback; }
+  };
+  const formatMoney = (v, currency = 'ZMW') => {
+    const n = Number(v) || 0;
+    return `${currency} ${n.toFixed(2)}`;
+  };
+
+  // ======= App State =======
+  let transactions = [];
+  let settings = { cap: 0, currency: 'ZMW' };
+  let chart = null;
+
+  // ======= DOM Nodes (guarded) =======
+  const nodes = {
+    form: $('#transaction-form'),
+    description: $('#description'),
+    amount: $('#amount'),
+    category: $('#category'),
+    date: $('#date'),
+    recordsBody: $('#records-body'),
+    totalRecords: $('#total-records'),
+    totalAmount: $('#total-amount'),
+    topCategory: $('#top-category'),
+    capRemaining: $('#cap-remaining'),
+    chartCanvas: $('#trend-chart'),
+    search: $('#search'),
+    importBtn: $('#import-json'),
+    exportBtn: $('#export-json'),
+    settingsForm: $('#settings-form'),
+    capInput: $('#cap'),
+    currencySelect: $('#currency'),
+    quickAdd: $('#quick-add'),
+    statusLine: $('.status-line')
+  };
+
+  // Early exit if critical missing
+  if (!nodes.form || !nodes.recordsBody || !nodes.chartCanvas) {
+    console.warn('SFT: missing essential DOM nodes. Script terminating early.');
+    return;
+  }
+
+  // ======= Persistence =======
+  function loadState() {
+    transactions = safeParse(localStorage.getItem(LS_KEYS.TX), []);
+    settings = Object.assign(settings, safeParse(localStorage.getItem(LS_KEYS.SETTINGS), {}));
+  }
+  function saveState() {
+    localStorage.setItem(LS_KEYS.TX, JSON.stringify(transactions));
+    localStorage.setItem(LS_KEYS.SETTINGS, JSON.stringify(settings));
+  }
+
+  // ======= UI Render =======
+  function renderTable(filtered = transactions) {
+    nodes.recordsBody.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    filtered.forEach((t, i) => {
+      const tr = document.createElement('tr');
+      tr.dataset.index = i;
+      tr.innerHTML = `
+        <td>${t.date}</td>
+        <td>${escapeHtml(t.description)}</td>
+        <td>${escapeHtml(t.category)}</td>
+        <td>${formatMoney(t.amount, settings.currency)}</td>
+        <td>
+          <button class="edit-btn" data-i="${i}" aria-label="Edit">Edit</button>
+          <button class="delete-btn" data-i="${i}" aria-label="Delete">Delete</button>
+        </td>`;
+      frag.appendChild(tr);
+    });
+    nodes.recordsBody.appendChild(frag);
+  }
+
+  function escapeHtml(str = '') {
+    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function updateStats() {
+    const total = transactions.reduce((s, t) => s + Number(t.amount || 0), 0);
+    nodes.totalRecords.textContent = transactions.length;
+    nodes.totalAmount.textContent = formatMoney(total, settings.currency);
+    nodes.topCategory.textContent = getTopCategory() || 'N/A';
+    const capRem = (Number(settings.cap) || 0) - total;
+    nodes.capRemaining.textContent = formatMoney(capRem, settings.currency);
+  }
+
+  function getTopCategory() {
+    if (transactions.length === 0) return '';
+    const counts = {};
+    transactions.forEach(t => { counts[t.category] = (counts[t.category] || 0) + Number(t.amount || 0); });
+    return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+  }
+
+  // ======= Chart =======
+  function safeChartDestroy() {
+    if (chart && typeof chart.destroy === 'function') {
+      try { chart.destroy(); } catch (e) { /* ignore */ }
+      chart = null;
+    }
+  }
+
+  function renderChart() {
+    const ctx = nodes.chartCanvas.getContext('2d');
+    safeChartDestroy();
+    // prepare last 7 days buckets (by date string)
+    const labels = getLastNDates(7);
+    const counts = labels.map(lbl => 0);
+    transactions.forEach(t => {
+      const idx = labels.indexOf(t.date);
+      if (idx >= 0) counts[idx] += Number(t.amount || 0);
+    });
+
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Spending',
+          data: counts,
+          borderColor: '#58a6ff',
+          backgroundColor: 'rgba(88,166,255,0.1)',
+          tension: 0.25,
+          pointRadius: 3,
+          pointBackgroundColor: '#79c0ff'
+        }]
+      },
+      options: {
+        plugins: { legend: { labels: { color: '#c9d1d9' } } },
+        scales: {
+          x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+          y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+        },
+        maintainAspectRatio: false,
+      }
+    });
+  }
+
+  function getLastNDates(n) {
+    const out = [];
+    for (let i = n-1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      out.push(d.toISOString().slice(0,10));
+    }
+    return out;
+  }
+
+  // ======= CRUD =======
+  function addTransaction(payload) {
+    transactions.push(payload);
+    saveState();
+    fullRefresh();
+  }
+  function updateTransaction(index, payload) {
+    if (transactions[index]) {
+      transactions[index] = payload;
+      saveState();
+      fullRefresh();
+    }
+  }
+  function deleteTransaction(index) {
+    transactions.splice(index, 1);
+    saveState();
+    fullRefresh();
+  }
+
+  // ======= Search =======
+  function simpleSearch(query) {
+    if (!query) return transactions;
+    // try regex first (safely)
+    try {
+      const re = new RegExp(query, 'i');
+      return transactions.filter(t => re.test(t.description) || re.test(t.category));
+    } catch (e) {
+      const q = query.toLowerCase();
+      return transactions.filter(t => (t.description || '').toLowerCase().includes(q) || (t.category||'').toLowerCase().includes(q));
+    }
+  }
+
+  // ======= Import / Export =======
+  function exportJson() {
+    const payload = { transactions, settings, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sft-data.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function importJson() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = () => {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (Array.isArray(parsed.transactions)) transactions = parsed.transactions;
+          if (parsed.settings) settings = Object.assign(settings, parsed.settings);
+          saveState();
+          populateSettingsForm();
+          fullRefresh();
+          alert('Import successful');
+        } catch (err) {
+          alert('Import failed: invalid JSON');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
+  // ======= Settings =======
+  function populateSettingsForm() {
+    if (nodes.capInput) nodes.capInput.value = settings.cap || '';
+    if (nodes.currencySelect) nodes.currencySelect.value = settings.currency || 'ZMW';
+  }
+
+  // ======= Form handling =======
+  let editIndex = -1;
+  function clearForm() {
+    nodes.description.value = '';
+    nodes.amount.value = '';
+    nodes.category.value = nodes.category.options[0]?.value || '';
+    nodes.date.value = new Date().toISOString().slice(0,10);
+    editIndex = -1;
+    nodes.form.querySelector('button[type="submit"]').textContent = 'Save';
+  }
+
+  function populateFormForEdit(i) {
+    const t = transactions[i];
+    if (!t) return;
+    nodes.description.value = t.description;
+    nodes.amount.value = t.amount;
+    nodes.category.value = t.category;
+    nodes.date.value = t.date;
+    editIndex = i;
+    nodes.form.querySelector('button[type="submit"]').textContent = 'Update';
+    nodes.description.focus();
+  }
+
+  // ======= Full refresh =======
+  function fullRefresh() {
+    renderTable();
+    updateStats();
+    renderChart();
+  }
+
+  // ======= Event listeners =======
+  document.addEventListener('DOMContentLoaded', () => {
+    // Load state
+    loadState();
+    populateSettingsForm();
+
+    // Ensure date default
+    if (!nodes.date.value) nodes.date.value = new Date().toISOString().slice(0,10);
+
+    // Initial render
+    fullRefresh();
+
+    // Form submit
+    nodes.form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const payload = {
+        description: nodes.description.value.trim(),
+        amount: Number(nodes.amount.value) || 0,
+        category: nodes.category.value,
+        date: nodes.date.value || new Date().toISOString().slice(0,10)
+      };
+
+      // basic validation
+      let hasErr = false;
+      if (!payload.description) {
+        $('.error-description').textContent = 'Description required';
+        hasErr = true;
+      } else $('.error-description').textContent = '';
+
+      if (!payload.amount || payload.amount <= 0) {
+        $('.error-amount').textContent = 'Amount must be > 0';
+        hasErr = true;
+      } else $('.error-amount').textContent = '';
+
+      if (!payload.category) {
+        $('.error-category').textContent = 'Choose a category';
+        hasErr = true;
+      } else $('.error-category').textContent = '';
+
+      if (!payload.date) {
+        $('.error-date').textContent = 'Date required';
+        hasErr = true;
+      } else $('.error-date').textContent = '';
+
+      if (hasErr) return;
+
+      if (editIndex >= 0) {
+        updateTransaction(editIndex, payload);
+      } else {
+        addTransaction(payload);
+      }
+      clearForm();
+    });
+
+    // Table action delegation
+    nodes.recordsBody.addEventListener('click', (e) => {
+      const edit = e.target.closest('.edit-btn');
+      const del = e.target.closest('.delete-btn');
+      if (edit) {
+        const idx = Number(edit.dataset.i);
+        populateFormForEdit(idx);
+        return;
+      }
+      if (del) {
+        const idx = Number(del.dataset.i);
+        if (confirm('Delete this transaction?')) deleteTransaction(idx);
+      }
+    });
+
+    // Search
+    if (nodes.search) {
+      nodes.search.addEventListener('input', (e) => {
+        const q = e.target.value.trim();
+        const filtered = simpleSearch(q);
+        renderTable(filtered);
+      });
+    }
+
+    // Import / Export
+    if (nodes.importBtn) nodes.importBtn.addEventListener('click', importJson);
+    if (nodes.exportBtn) nodes.exportBtn.addEventListener('click', exportJson);
+
+    // Settings submit
+    if (nodes.settingsForm) {
+      nodes.settingsForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        settings.cap = Number(nodes.capInput.value) || 0;
+        settings.currency = (nodes.currencySelect.value || 'ZMW');
+        saveState();
+        updateStats();
+        alert('Settings saved');
+      });
+    }
+
+    // Quick add
+    if (nodes.quickAdd) {
+      nodes.quickAdd.addEventListener('click', () => {
+        document.querySelector('#add-form').scrollIntoView({ behavior: 'smooth' });
+        nodes.description.focus();
+      });
+    }
+
+    // Keyboard status (vim-like)
+    document.addEventListener('keydown', (e) => {
+      if (!nodes.statusLine) return;
+      if (e.key === 'i') nodes.statusLine.textContent = '-- INSERT MODE --';
+      if (e.key === 'Escape') nodes.statusLine.textContent = '-- NORMAL MODE --';
+    });
+
+    // make chart responsive: re-render on resize with debounce
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(renderChart, 220);
+    });
+  });
+
+})();
+
 </body>
 </html>
+
