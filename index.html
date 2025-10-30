@@ -1,201 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student Finance Tracker</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-:root {
-  --bg: #0d1117;
-  --fg: #c9d1d9;
-  --accent: #58a6ff;
-  --border: #30363d;
-  --error: #f85149;
-  --hover-bg: #21262d;
-  --alt-bg: #161b22;
-  --font-body: 'JetBrains Mono', monospace;
-}
-
-* { box-sizing: border-box; }
-
-body {
-  font-family: var(--font-body);
-  background: var(--bg);
-  color: var(--fg);
-  margin: 0;
-  padding: 0 1rem;
-  line-height: 1.6;
-  opacity: 0;
-  animation: fadeInBody 0.6s ease forwards;
-}
-
-/* Header */
-header {
-  border-bottom: 2px solid var(--border);
-  padding: 1rem 0;
-  text-align: center;
-  background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
-}
-header h1 {
-  font-size: 1.5rem;
-  color: var(--accent);
-  margin: 0;
-}
-header p { color: #8b949e; margin: 0.5rem 0 0; }
-
-.typing {
-  overflow: hidden;
-  border-right: 2px solid var(--accent);
-  white-space: nowrap;
-  animation: typing 2.5s steps(30, end), blink 0.75s step-end infinite;
-}
-
-/* Nav */
-.menu-toggle {
-  background: none;
-  color: var(--accent);
-  border: 1px solid var(--border);
-  padding: 0.5rem 0.75rem;
-  font-family: inherit;
-  cursor: pointer;
-  margin: 1rem 0;
-  border-radius: 4px;
-  width: 100%;
-}
-nav {
-  display: none;
-}
-nav.open {
-  display: block;
-  animation: fadeIn 0.3s ease;
-}
-nav ul {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-nav a {
-  display: block;
-  padding: 0.5rem 0.75rem;
-  border-radius: 4px;
-  text-decoration: none;
-  color: var(--fg);
-}
-nav a:hover, nav a:focus { background: var(--hover-bg); }
-
-/* Sections */
-section {
-  background: #0d1117;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(88, 166, 255, 0.05);
-  margin-bottom: 1.5rem;
-  padding: 1.25rem;
-}
-h2 { color: var(--accent); font-size: 1.2rem; }
-
-/* Tables */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-  font-size: 0.9rem;
-  overflow-x: auto;
-  display: block;
-}
-th, td {
-  border: 1px solid var(--border);
-  padding: 0.6rem;
-  text-align: left;
-  white-space: nowrap;
-}
-tr:nth-child(even) { background: var(--alt-bg); }
-tr:hover { background: var(--hover-bg); }
-
-/* Forms */
-input, select, button {
-  background: var(--bg);
-  color: var(--fg);
-  border: 1px solid var(--border);
-  padding: 0.5rem 0.75rem;
-  border-radius: 4px;
-  width: 100%;
-  font-family: inherit;
-  font-size: 1rem;
-  margin-top: 0.5rem;
-}
-button {
-  background: var(--accent);
-  color: var(--bg);
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-button:hover { background: #79c0ff; transform: scale(1.03); }
-input:focus, select:focus, button:focus { outline: 2px solid var(--accent); }
-
-.error { color: var(--error); font-size: 0.85rem; margin-top: 0.25rem; }
-
-/* Quick Add Button */
-#quick-add {
-  position: fixed;
-  bottom: 1.25rem;
-  right: 1.25rem;
-  background: var(--accent);
-  color: var(--bg);
-  border: none;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  box-shadow: 0 0 10px rgba(88,166,255,0.5);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  cursor: pointer;
-}
-#quick-add:hover { transform: scale(1.1); }
-
-/* Footer */
-footer {
-  border-top: 2px solid var(--border);
-  font-size: 0.9rem;
-  text-align: center;
-  padding: 1rem 0;
-}
-.status-line { color: #8b949e; font-size: 0.85rem; }
-
-/* Animations */
-@keyframes typing { from { width: 0 } to { width: 100% } }
-@keyframes blink { 50% { border-color: transparent } }
-@keyframes fadeInBody { to { opacity: 1; } }
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Responsive */
-@media (min-width: 600px) {
-  .menu-toggle { display: none; }
-  nav { display: block !important; }
-  body { padding: 0 2rem; }
-  main { max-width: 800px; margin: 0 auto; }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Finance Tracker</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
 <a href="#main-content" class="skip-link">Skip to content</a>
 
 <header>
-  <h1 class="typing">Student Finance Tracker</h1>
+  <h1>Student Finance Tracker</h1>
   <p>Track your budgets, transactions, and spending trends</p>
+  <button id="menu-toggle" aria-label="Toggle navigation">☰</button>
 </header>
 
-<nav role="navigation">
+<nav id="navbar">
   <ul>
     <li><a href="#dashboard">Dashboard</a></li>
     <li><a href="#records">Transactions</a></li>
@@ -205,7 +26,7 @@ footer {
   </ul>
 </nav>
 
-<main id="main-content" role="main">
+<main id="main-content">
   <section id="dashboard">
     <h2>Dashboard</h2>
     <div class="stats">
@@ -213,7 +34,7 @@ footer {
       <div>Total Amount: <span id="total-amount">0.00</span></div>
       <div>Top Category: <span id="top-category">N/A</span></div>
       <div>Cap Remaining: <span id="cap-remaining">0.00</span></div>
-      <canvas id="trend-chart" width="400" height="200" aria-label="Last 7 days spending trend"></canvas>
+      <canvas id="trend-chart" width="400" height="200" aria-label="Spending trend"></canvas>
     </div>
   </section>
 
@@ -223,7 +44,11 @@ footer {
     <table>
       <thead>
         <tr>
-          <th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Actions</th>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody id="records-body"></tbody>
@@ -233,23 +58,27 @@ footer {
   <section id="add-form">
     <h2>Add / Edit Transaction</h2>
     <form id="transaction-form">
-      <label>Description</label>
-      <input type="text" id="description" required>
+      <label for="description">Description</label>
+      <input type="text" id="description" name="description" required>
       <span class="error error-description"></span>
 
-      <label>Amount</label>
-      <input type="number" step="0.01" id="amount" required>
+      <label for="amount">Amount</label>
+      <input type="number" step="0.01" id="amount" name="amount" required>
       <span class="error error-amount"></span>
 
-      <label>Category</label>
-      <select id="category" required>
-        <option>Food</option><option>Books</option><option>Transport</option>
-        <option>Entertainment</option><option>Fees</option><option>Other</option>
+      <label for="category">Category</label>
+      <select id="category" name="category" required>
+        <option>Food</option>
+        <option>Books</option>
+        <option>Transport</option>
+        <option>Entertainment</option>
+        <option>Fees</option>
+        <option>Other</option>
       </select>
       <span class="error error-category"></span>
 
-      <label>Date</label>
-      <input type="date" id="date" required>
+      <label for="date">Date</label>
+      <input type="date" id="date" name="date" required>
       <span class="error error-date"></span>
 
       <button type="submit">Save</button>
@@ -259,10 +88,10 @@ footer {
   <section id="settings">
     <h2>Settings</h2>
     <form id="settings-form">
-      <label>Set Monthly Cap</label>
+      <label for="cap">Set Monthly Cap</label>
       <input type="number" id="cap" step="0.01">
 
-      <label>Currency</label>
+      <label for="currency">Currency</label>
       <select id="currency">
         <option value="ZMW">ZMW</option>
         <option value="USD">USD</option>
@@ -282,462 +111,15 @@ footer {
     <h2>About</h2>
     <p>Purpose: Track student spending and budgets.</p>
     <p>Contact: <a href="mailto:e.mulilo1@alustudent.com">Email</a> | 
-    <a href="https://github.com/ephraimm-zm" target="_blank">GitHub</a></p>
+      <a href="https://github.com/ephraimm-zm" target="_blank">GitHub</a></p>
   </section>
 </main>
 
 <footer>
   <p>&copy; Ephraim’s Student Finance Tracker</p>
-  <p class="status-line">-- NORMAL MODE --</p>
+  <div class="status-line">-- NORMAL MODE --</div>
 </footer>
 
-<button id="quick-add" aria-label="Quick Add">＋</button>
-
-<script>
-/* ====== Mobile Nav Toggle ====== */
-const nav = document.querySelector("nav");
-const menuBtn = document.createElement("button");
-menuBtn.textContent = "☰ Menu";
-menuBtn.className = "menu-toggle";
-menuBtn.setAttribute("aria-expanded", "false");
-nav.before(menuBtn);
-menuBtn.addEventListener("click", () => {
-  const expanded = menuBtn.getAttribute("aria-expanded") === "true";
-  menuBtn.setAttribute("aria-expanded", String(!expanded));
-  nav.classList.toggle("open");
-});
-
-/* ====== Smooth Scroll ====== */
-document.querySelectorAll('a[href^="#"]').forEach(link => {
-  link.addEventListener("click", e => {
-    e.preventDefault();
-    const target = document.querySelector(link.getAttribute("href"));
-    if (target) target.scrollIntoView({ behavior: "smooth" });
-    if (window.innerWidth < 600) {
-      nav.classList.remove("open");
-      menuBtn.setAttribute("aria-expanded", "false");
-    }
-  });
-});
-
-/* ====== Vim-Mode Status Line ====== */
-window.addEventListener("keydown", e => {
-  const status = document.querySelector(".status-line");
-  if (e.key === "i") status.textContent = "-- INSERT MODE --";
-  if (e.key === "Escape") status.textContent = "-- NORMAL MODE --";
-});
-
-/* ====== Quick Add Button ====== */
-document.getElementById("quick-add").addEventListener("click", () => {
-  document.querySelector("#add-form").scrollIntoView({ behavior: "smooth" });
-});
-
-/* ====== Chart.js Terminal Style ====== */
-const ctx = document.getElementById('trend-chart');
-new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
-    datasets: [{
-      label: 'Spending',
-      data: [30, 70, 45, 90, 40, 65, 80],
-      borderColor: '#58a6ff',
-      backgroundColor: 'rgba(88,166,255,0.1)',
-      tension: 0.3,
-      pointRadius: 3,
-      pointBackgroundColor: '#79c0ff'
-    }]
-  },
-  options: {
-    plugins: { legend: { labels: { color: '#c9d1d9' } } },
-    scales: {
-      x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
-      y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
-    }
-  }
-});
-</script
-  // ui.js - robust app script (non-module). Put this after Chart.js and DOM.
-(function () {
-  // ======= Constants & Helpers =======
-  const LS_KEYS = { TX: 'sft_transactions_v1', SETTINGS: 'sft_settings_v1' };
-
-  const $ = sel => document.querySelector(sel);
-  const $$ = sel => Array.from(document.querySelectorAll(sel));
-  const safeParse = (s, fallback) => {
-    try { return JSON.parse(s || 'null') || fallback; } catch (e) { return fallback; }
-  };
-  const formatMoney = (v, currency = 'ZMW') => {
-    const n = Number(v) || 0;
-    return `${currency} ${n.toFixed(2)}`;
-  };
-
-  // ======= App State =======
-  let transactions = [];
-  let settings = { cap: 0, currency: 'ZMW' };
-  let chart = null;
-
-  // ======= DOM Nodes (guarded) =======
-  const nodes = {
-    form: $('#transaction-form'),
-    description: $('#description'),
-    amount: $('#amount'),
-    category: $('#category'),
-    date: $('#date'),
-    recordsBody: $('#records-body'),
-    totalRecords: $('#total-records'),
-    totalAmount: $('#total-amount'),
-    topCategory: $('#top-category'),
-    capRemaining: $('#cap-remaining'),
-    chartCanvas: $('#trend-chart'),
-    search: $('#search'),
-    importBtn: $('#import-json'),
-    exportBtn: $('#export-json'),
-    settingsForm: $('#settings-form'),
-    capInput: $('#cap'),
-    currencySelect: $('#currency'),
-    quickAdd: $('#quick-add'),
-    statusLine: $('.status-line')
-  };
-
-  // Early exit if critical missing
-  if (!nodes.form || !nodes.recordsBody || !nodes.chartCanvas) {
-    console.warn('SFT: missing essential DOM nodes. Script terminating early.');
-    return;
-  }
-
-  // ======= Persistence =======
-  function loadState() {
-    transactions = safeParse(localStorage.getItem(LS_KEYS.TX), []);
-    settings = Object.assign(settings, safeParse(localStorage.getItem(LS_KEYS.SETTINGS), {}));
-  }
-  function saveState() {
-    localStorage.setItem(LS_KEYS.TX, JSON.stringify(transactions));
-    localStorage.setItem(LS_KEYS.SETTINGS, JSON.stringify(settings));
-  }
-
-  // ======= UI Render =======
-  function renderTable(filtered = transactions) {
-    nodes.recordsBody.innerHTML = '';
-    const frag = document.createDocumentFragment();
-    filtered.forEach((t, i) => {
-      const tr = document.createElement('tr');
-      tr.dataset.index = i;
-      tr.innerHTML = `
-        <td>${t.date}</td>
-        <td>${escapeHtml(t.description)}</td>
-        <td>${escapeHtml(t.category)}</td>
-        <td>${formatMoney(t.amount, settings.currency)}</td>
-        <td>
-          <button class="edit-btn" data-i="${i}" aria-label="Edit">Edit</button>
-          <button class="delete-btn" data-i="${i}" aria-label="Delete">Delete</button>
-        </td>`;
-      frag.appendChild(tr);
-    });
-    nodes.recordsBody.appendChild(frag);
-  }
-
-  function escapeHtml(str = '') {
-    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  }
-
-  function updateStats() {
-    const total = transactions.reduce((s, t) => s + Number(t.amount || 0), 0);
-    nodes.totalRecords.textContent = transactions.length;
-    nodes.totalAmount.textContent = formatMoney(total, settings.currency);
-    nodes.topCategory.textContent = getTopCategory() || 'N/A';
-    const capRem = (Number(settings.cap) || 0) - total;
-    nodes.capRemaining.textContent = formatMoney(capRem, settings.currency);
-  }
-
-  function getTopCategory() {
-    if (transactions.length === 0) return '';
-    const counts = {};
-    transactions.forEach(t => { counts[t.category] = (counts[t.category] || 0) + Number(t.amount || 0); });
-    return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
-  }
-
-  // ======= Chart =======
-  function safeChartDestroy() {
-    if (chart && typeof chart.destroy === 'function') {
-      try { chart.destroy(); } catch (e) { /* ignore */ }
-      chart = null;
-    }
-  }
-
-  function renderChart() {
-    const ctx = nodes.chartCanvas.getContext('2d');
-    safeChartDestroy();
-    // prepare last 7 days buckets (by date string)
-    const labels = getLastNDates(7);
-    const counts = labels.map(lbl => 0);
-    transactions.forEach(t => {
-      const idx = labels.indexOf(t.date);
-      if (idx >= 0) counts[idx] += Number(t.amount || 0);
-    });
-
-    chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Spending',
-          data: counts,
-          borderColor: '#58a6ff',
-          backgroundColor: 'rgba(88,166,255,0.1)',
-          tension: 0.25,
-          pointRadius: 3,
-          pointBackgroundColor: '#79c0ff'
-        }]
-      },
-      options: {
-        plugins: { legend: { labels: { color: '#c9d1d9' } } },
-        scales: {
-          x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
-          y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
-        },
-        maintainAspectRatio: false,
-      }
-    });
-  }
-
-  function getLastNDates(n) {
-    const out = [];
-    for (let i = n-1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      out.push(d.toISOString().slice(0,10));
-    }
-    return out;
-  }
-
-  // ======= CRUD =======
-  function addTransaction(payload) {
-    transactions.push(payload);
-    saveState();
-    fullRefresh();
-  }
-  function updateTransaction(index, payload) {
-    if (transactions[index]) {
-      transactions[index] = payload;
-      saveState();
-      fullRefresh();
-    }
-  }
-  function deleteTransaction(index) {
-    transactions.splice(index, 1);
-    saveState();
-    fullRefresh();
-  }
-
-  // ======= Search =======
-  function simpleSearch(query) {
-    if (!query) return transactions;
-    // try regex first (safely)
-    try {
-      const re = new RegExp(query, 'i');
-      return transactions.filter(t => re.test(t.description) || re.test(t.category));
-    } catch (e) {
-      const q = query.toLowerCase();
-      return transactions.filter(t => (t.description || '').toLowerCase().includes(q) || (t.category||'').toLowerCase().includes(q));
-    }
-  }
-
-  // ======= Import / Export =======
-  function exportJson() {
-    const payload = { transactions, settings, exportedAt: new Date().toISOString() };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'sft-data.json';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  function importJson() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json';
-    input.onchange = () => {
-      const file = input.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const parsed = JSON.parse(reader.result);
-          if (Array.isArray(parsed.transactions)) transactions = parsed.transactions;
-          if (parsed.settings) settings = Object.assign(settings, parsed.settings);
-          saveState();
-          populateSettingsForm();
-          fullRefresh();
-          alert('Import successful');
-        } catch (err) {
-          alert('Import failed: invalid JSON');
-        }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
-  }
-
-  // ======= Settings =======
-  function populateSettingsForm() {
-    if (nodes.capInput) nodes.capInput.value = settings.cap || '';
-    if (nodes.currencySelect) nodes.currencySelect.value = settings.currency || 'ZMW';
-  }
-
-  // ======= Form handling =======
-  let editIndex = -1;
-  function clearForm() {
-    nodes.description.value = '';
-    nodes.amount.value = '';
-    nodes.category.value = nodes.category.options[0]?.value || '';
-    nodes.date.value = new Date().toISOString().slice(0,10);
-    editIndex = -1;
-    nodes.form.querySelector('button[type="submit"]').textContent = 'Save';
-  }
-
-  function populateFormForEdit(i) {
-    const t = transactions[i];
-    if (!t) return;
-    nodes.description.value = t.description;
-    nodes.amount.value = t.amount;
-    nodes.category.value = t.category;
-    nodes.date.value = t.date;
-    editIndex = i;
-    nodes.form.querySelector('button[type="submit"]').textContent = 'Update';
-    nodes.description.focus();
-  }
-
-  // ======= Full refresh =======
-  function fullRefresh() {
-    renderTable();
-    updateStats();
-    renderChart();
-  }
-
-  // ======= Event listeners =======
-  document.addEventListener('DOMContentLoaded', () => {
-    // Load state
-    loadState();
-    populateSettingsForm();
-
-    // Ensure date default
-    if (!nodes.date.value) nodes.date.value = new Date().toISOString().slice(0,10);
-
-    // Initial render
-    fullRefresh();
-
-    // Form submit
-    nodes.form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const payload = {
-        description: nodes.description.value.trim(),
-        amount: Number(nodes.amount.value) || 0,
-        category: nodes.category.value,
-        date: nodes.date.value || new Date().toISOString().slice(0,10)
-      };
-
-      // basic validation
-      let hasErr = false;
-      if (!payload.description) {
-        $('.error-description').textContent = 'Description required';
-        hasErr = true;
-      } else $('.error-description').textContent = '';
-
-      if (!payload.amount || payload.amount <= 0) {
-        $('.error-amount').textContent = 'Amount must be > 0';
-        hasErr = true;
-      } else $('.error-amount').textContent = '';
-
-      if (!payload.category) {
-        $('.error-category').textContent = 'Choose a category';
-        hasErr = true;
-      } else $('.error-category').textContent = '';
-
-      if (!payload.date) {
-        $('.error-date').textContent = 'Date required';
-        hasErr = true;
-      } else $('.error-date').textContent = '';
-
-      if (hasErr) return;
-
-      if (editIndex >= 0) {
-        updateTransaction(editIndex, payload);
-      } else {
-        addTransaction(payload);
-      }
-      clearForm();
-    });
-
-    // Table action delegation
-    nodes.recordsBody.addEventListener('click', (e) => {
-      const edit = e.target.closest('.edit-btn');
-      const del = e.target.closest('.delete-btn');
-      if (edit) {
-        const idx = Number(edit.dataset.i);
-        populateFormForEdit(idx);
-        return;
-      }
-      if (del) {
-        const idx = Number(del.dataset.i);
-        if (confirm('Delete this transaction?')) deleteTransaction(idx);
-      }
-    });
-
-    // Search
-    if (nodes.search) {
-      nodes.search.addEventListener('input', (e) => {
-        const q = e.target.value.trim();
-        const filtered = simpleSearch(q);
-        renderTable(filtered);
-      });
-    }
-
-    // Import / Export
-    if (nodes.importBtn) nodes.importBtn.addEventListener('click', importJson);
-    if (nodes.exportBtn) nodes.exportBtn.addEventListener('click', exportJson);
-
-    // Settings submit
-    if (nodes.settingsForm) {
-      nodes.settingsForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        settings.cap = Number(nodes.capInput.value) || 0;
-        settings.currency = (nodes.currencySelect.value || 'ZMW');
-        saveState();
-        updateStats();
-        alert('Settings saved');
-      });
-    }
-
-    // Quick add
-    if (nodes.quickAdd) {
-      nodes.quickAdd.addEventListener('click', () => {
-        document.querySelector('#add-form').scrollIntoView({ behavior: 'smooth' });
-        nodes.description.focus();
-      });
-    }
-
-    // Keyboard status (vim-like)
-    document.addEventListener('keydown', (e) => {
-      if (!nodes.statusLine) return;
-      if (e.key === 'i') nodes.statusLine.textContent = '-- INSERT MODE --';
-      if (e.key === 'Escape') nodes.statusLine.textContent = '-- NORMAL MODE --';
-    });
-
-    // make chart responsive: re-render on resize with debounce
-    let resizeTimer = null;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(renderChart, 220);
-    });
-  });
-
-})();
-
+<script src="scripts/ui.js"></script>
 </body>
 </html>
-
