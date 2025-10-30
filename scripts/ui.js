@@ -1,222 +1,217 @@
-import { transactions, updateState, settings } from './state.js';
-import { validators } from './validators.js';
-import { compileRegex, highlight } from './search.js';
-import { save as saveToStorage, load as loadFromStorage } from './storage.js';
+(function () {
+  const $ = sel => document.querySelector(sel);
+  const safeParse = (v, f) => { try { return JSON.parse(v) || f; } catch { return f; } };
 
-document.addEventListener('DOMContentLoaded', () => {
-  // DOM Elements
-  const form = document.getElementById('transaction-form');
-  const tbody = document.getElementById('records-body');
-  const totalRecords = document.getElementById('total-records');
-  const totalAmount = document.getElementById('total-amount');
-  const topCategory = document.getElementById('top-category');
-  const capRemaining = document.getElementById('cap-remaining');
-  const searchInput = document.getElementById('search');
+  const LS = { TX: 'sft_transactions_v1', SETTINGS: 'sft_settings_v1' };
+  let tx = [], settings = { cap: 0, currency: 'ZMW' }, chart = null, editIndex = -1;
 
-  const settingsForm = document.getElementById('settings-form');
-  const importBtn = document.getElementById('import-json');
-  const exportBtn = document.getElementById('export-json');
-
-  // Load saved data
-  const savedData = loadFromStorage();
-  if (savedData.length) {
-    transactions.push(...savedData);
-  }
-
-  // Render function
-  const render = () => {
-    tbody.innerHTML = '';
-    let sum = 0;
-    let categoryCount = {};
-
-    transactions.forEach(tx => {
-      sum += parseFloat(tx.amount);
-      categoryCount[tx.category] = (categoryCount[tx.category] || 0) + 1;
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${tx.date}</td>
-        <td>${tx.description}</td>
-        <td>${tx.category}</td>
-        <td>${parseFloat(tx.amount).toFixed(2)}</td>
-        <td>
-          <button class="edit" data-id="${tx.id}">Edit</button>
-          <button class="delete" data-id="${tx.id}">Delete</button>
-        </td>`;
-      tbody.appendChild(tr);
-    });
-
-    totalRecords.textContent = transactions.length;
-    totalAmount.textContent = sum.toFixed(2);
-    topCategory.textContent = Object.keys(categoryCount)
-      .sort((a, b) => categoryCount[b] - categoryCount[a])[0] || 'N/A';
-    capRemaining.textContent = (settings.cap - sum).toFixed(2);
-
-    updateState();
-    saveToStorage(transactions);
+  const els = {
+    form: $('#transaction-form'),
+    desc: $('#description'),
+    amt: $('#amount'),
+    cat: $('#category'),
+    date: $('#date'),
+    body: $('#records-body'),
+    totalRecords: $('#total-records'),
+    totalAmount: $('#total-amount'),
+    topCategory: $('#top-category'),
+    capRemaining: $('#cap-remaining'),
+    search: $('#search'),
+    importBtn: $('#import-json'),
+    exportBtn: $('#export-json'),
+    settingsForm: $('#settings-form'),
+    cap: $('#cap'),
+    currency: $('#currency'),
+    chart: $('#trend-chart'),
+    status: $('.status-line'),
+    menuToggle: $('#menu-toggle'),
+    navList: document.querySelector('nav ul')
   };
 
-  render();
-  const ctx = document.getElementById('trend-chart').getContext('2d');
-let trendChart = null;
+  document.addEventListener('DOMContentLoaded', init);
 
-const updateChart = () => {
-  // Get last 7 days
-  const last7Days = Array.from({length:7}, (_,i)=>{
-    const d = new Date();
-    d.setDate(d.getDate() - (6-i));
-    return d.toISOString().split('T')[0];
-  });
+  function init() {
+    load();
+    renderAll();
+    bindEvents();
+    els.date.value ||= new Date().toISOString().slice(0, 10);
+  }
 
-  const amounts = last7Days.map(day=>{
-    return transactions
-      .filter(tx => tx.date === day)
-      .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
-  });
+  function bindEvents() {
+    els.form.addEventListener('submit', onSave);
+    els.body.addEventListener('click', onTable);
+    els.search.addEventListener('input', onSearch);
+    els.importBtn.addEventListener('click', importJSON);
+    els.exportBtn.addEventListener('click', exportJSON);
+    els.settingsForm.addEventListener('submit', onSettings);
+    els.menuToggle.addEventListener('click', () => els.navList.classList.toggle('show'));
 
-  if(trendChart) trendChart.destroy(); // clear previous chart
+    document.addEventListener('keydown', e => {
+      if (e.key === 'i') els.status.textContent = '-- INSERT MODE --';
+      if (e.key === 'Escape') els.status.textContent = '-- NORMAL MODE --';
+    });
+  }
 
-  trendChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: last7Days,
-      datasets: [{
-        label: 'Spending per Day',
-        data: amounts,
-        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { beginAtZero: true }
-      }
-    }
-  });
-};
-  
-  // Transaction Form Submit
-  form.addEventListener('submit', e => {
+  function onSave(e) {
     e.preventDefault();
-
-    const description = document.getElementById('description').value.trim();
-    const amount = document.getElementById('amount').value.trim();
-    const category = document.getElementById('category').value.trim();
-    const date = document.getElementById('date').value.trim();
-
-    let valid = true;
-    if (!validators.description(description)) { document.querySelector('.error-description').textContent = 'Invalid'; valid=false;} else {document.querySelector('.error-description').textContent='';}
-    if (!validators.amount(amount)) { document.querySelector('.error-amount').textContent = 'Invalid'; valid=false;} else {document.querySelector('.error-amount').textContent='';}
-    if (!validators.category(category)) { document.querySelector('.error-category').textContent = 'Invalid'; valid=false;} else {document.querySelector('.error-category').textContent='';}
-    if (!validators.date(date)) { document.querySelector('.error-date').textContent = 'Invalid'; valid=false;} else {document.querySelector('.error-date').textContent='';}
-
-    if (!valid) return;
-
-    const newTx = {
-      id: 'txn_' + Date.now(),
-      description,
-      amount: parseFloat(amount),
-      category,
-      date,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+    const t = {
+      description: els.desc.value.trim(),
+      amount: Number(els.amt.value) || 0,
+      category: els.cat.value,
+      date: els.date.value
     };
+    if (!t.description || !t.amount || !t.category || !t.date) return;
+    if (editIndex >= 0) tx[editIndex] = t; else tx.push(t);
+    editIndex = -1;
+    save(); renderAll(); els.form.reset();
+  }
 
-    transactions.push(newTx);
-    render();
-    form.reset();
-  });
+  function onTable(e) {
+    if (e.target.classList.contains('delete-btn')) {
+      tx.splice(e.target.dataset.i, 1);
+      save(); renderAll();
+    } else if (e.target.classList.contains('edit-btn')) {
+      const t = tx[e.target.dataset.i];
+      els.desc.value = t.description; els.amt.value = t.amount;
+      els.cat.value = t.category; els.date.value = t.date;
+      editIndex = e.target.dataset.i;
+    }
+  }
 
-  // Edit / Delete Buttons
-  tbody.addEventListener('click', e => {
-    const id = e.target.dataset.id;
-    if (e.target.classList.contains('delete')) {
-      const idx = transactions.findIndex(t => t.id === id);
-      if (idx > -1) { transactions.splice(idx, 1); render(); }
-    } else if (e.target.classList.contains('edit')) {
-      const tx = transactions.find(t => t.id === id);
-      if (tx) {
-        document.getElementById('description').value = tx.description;
-        document.getElementById('amount').value = tx.amount;
-        document.getElementById('category').value = tx.category;
-        document.getElementById('date').value = tx.date;
+  function onSearch(e) {
+    const q = e.target.value.trim();
+    let filtered = tx;
+    if (q) {
+      try {
+        const re = new RegExp(q, 'i');
+        filtered = tx.filter(t => re.test(t.description) || re.test(t.category));
+      } catch {
+        filtered = tx.filter(t =>
+          t.description.toLowerCase().includes(q.toLowerCase()) ||
+          t.category.toLowerCase().includes(q.toLowerCase())
+        );
       }
     }
-  });
+    renderTable(filtered);
+  }
 
-  // Search
-  searchInput.addEventListener('input', e => {
-    const pattern = compileRegex(e.target.value);
-    tbody.innerHTML = '';
-    transactions.forEach(tx => {
-      const matches = pattern ? [tx.description, tx.category, tx.date, tx.amount.toString()].some(f => pattern.test(f)) : true;
-      if (matches) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${highlight(tx.date, pattern)}</td>
-          <td>${highlight(tx.description, pattern)}</td>
-          <td>${highlight(tx.category, pattern)}</td>
-          <td>${highlight(tx.amount.toFixed(2), pattern)}</td>
-          <td>
-            <button class="edit" data-id="${tx.id}">Edit</button>
-            <button class="delete" data-id="${tx.id}">Delete</button>
-          </td>`;
-        tbody.appendChild(tr);
+  function onSettings(e) {
+    e.preventDefault();
+    settings.cap = Number(els.cap.value) || 0;
+    settings.currency = els.currency.value || 'ZMW';
+    save(); renderStats();
+  }
+
+  function load() {
+    tx = safeParse(localStorage.getItem(LS.TX), []);
+    settings = Object.assign(settings, safeParse(localStorage.getItem(LS.SETTINGS), {}));
+    els.cap.value = settings.cap;
+    els.currency.value = settings.currency;
+  }
+
+  function save() {
+    localStorage.setItem(LS.TX, JSON.stringify(tx));
+    localStorage.setItem(LS.SETTINGS, JSON.stringify(settings));
+  }
+
+  function renderAll() {
+    renderTable(tx);
+    renderStats();
+    renderChart();
+  }
+
+  function renderTable(list) {
+    els.body.innerHTML = list.map((t, i) => `
+      <tr>
+        <td>${t.date}</td>
+        <td>${t.description}</td>
+        <td>${t.category}</td>
+        <td>${settings.currency} ${t.amount.toFixed(2)}</td>
+        <td>
+          <button class="edit-btn" data-i="${i}">Edit</button>
+          <button class="delete-btn" data-i="${i}">Delete</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  function renderStats() {
+    const total = tx.reduce((s, t) => s + t.amount, 0);
+    els.totalRecords.textContent = tx.length;
+    els.totalAmount.textContent = `${settings.currency} ${total.toFixed(2)}`;
+    const catSum = {};
+    tx.forEach(t => catSum[t.category] = (catSum[t.category] || 0) + t.amount);
+    const top = Object.entries(catSum).sort((a, b) => b[1] - a[1])[0];
+    els.topCategory.textContent = top ? top[0] : 'N/A';
+    els.capRemaining.textContent = `${settings.currency} ${(settings.cap - total).toFixed(2)}`;
+  }
+
+  function renderChart() {
+    if (!els.chart) return;
+    const ctx = els.chart.getContext('2d');
+    if (chart) chart.destroy();
+    const labels = lastNDates(7);
+    const data = labels.map(d =>
+      tx.filter(t => t.date === d).reduce((s, t) => s + t.amount, 0)
+    );
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Spending',
+          data,
+          borderColor: '#58a6ff',
+          backgroundColor: 'rgba(88,166,255,0.1)',
+          tension: 0.25,
+          pointRadius: 3
+        }]
+      },
+      options: {
+        plugins: { legend: { labels: { color: '#c9d1d9' } } },
+        scales: {
+          x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+          y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+        },
+        maintainAspectRatio: false
       }
     });
-  });
+  }
 
-  // Settings Form
-  settingsForm.cap.value = settings.cap || 0;
-  settingsForm.currency.value = settings.currency;
+  function lastNDates(n) {
+    const arr = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      arr.push(d.toISOString().slice(0, 10));
+    }
+    return arr;
+  }
 
-  settingsForm.addEventListener('submit', e => {
-    e.preventDefault();
-    settings.cap = parseFloat(settingsForm.cap.value) || 0;
-    settings.currency = settingsForm.currency.value;
-    updateState();
-    render();
-  });
+  function exportJSON() {
+    const blob = new Blob([JSON.stringify({ tx, settings }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'sft-data.json'; a.click();
+    URL.revokeObjectURL(url);
+  }
 
-  // Import JSON
-  importBtn.addEventListener('click', () => {
+  function importJSON() {
     const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json';
-    input.onchange = e => {
-      const file = e.target.files[0];
+    input.type = 'file'; input.accept = '.json';
+    input.onchange = () => {
+      const file = input.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = ev => {
+      reader.onload = () => {
         try {
-          const data = JSON.parse(ev.target.result);
-          if (!Array.isArray(data)) throw new Error('Invalid JSON structure');
-          data.forEach(tx => { if (!tx.id) tx.id = 'txn_' + Date.now(); });
-          transactions.push(...data);
-          updateState();
-          render();
-          console.log('Import successful!');
-        } catch (err) {
-          console.error('Failed to import JSON:', err);
-        }
+          const data = JSON.parse(reader.result);
+          if (data.tx) tx = data.tx;
+          if (data.settings) settings = Object.assign(settings, data.settings);
+          save(); renderAll();
+        } catch { alert('Invalid JSON'); }
       };
       reader.readAsText(file);
     };
     input.click();
-  });
-
-  // Export JSON
-  exportBtn.addEventListener('click', () => {
-    const dataStr = JSON.stringify(transactions, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'transactions.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-});
-
+  }
+})();
