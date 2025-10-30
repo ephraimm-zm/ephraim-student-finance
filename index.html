@@ -4,18 +4,198 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Student Finance Tracker</title>
-<link rel="stylesheet" href="styles/main.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --bg: #0d1117;
+  --fg: #c9d1d9;
+  --accent: #58a6ff;
+  --border: #30363d;
+  --error: #f85149;
+  --hover-bg: #21262d;
+  --alt-bg: #161b22;
+  --font-body: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--fg);
+  margin: 0;
+  padding: 0 1rem;
+  line-height: 1.6;
+  opacity: 0;
+  animation: fadeInBody 0.6s ease forwards;
+}
+
+/* Header */
+header {
+  border-bottom: 2px solid var(--border);
+  padding: 1rem 0;
+  text-align: center;
+  background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
+}
+header h1 {
+  font-size: 1.5rem;
+  color: var(--accent);
+  margin: 0;
+}
+header p { color: #8b949e; margin: 0.5rem 0 0; }
+
+.typing {
+  overflow: hidden;
+  border-right: 2px solid var(--accent);
+  white-space: nowrap;
+  animation: typing 2.5s steps(30, end), blink 0.75s step-end infinite;
+}
+
+/* Nav */
+.menu-toggle {
+  background: none;
+  color: var(--accent);
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  font-family: inherit;
+  cursor: pointer;
+  margin: 1rem 0;
+  border-radius: 4px;
+  width: 100%;
+}
+nav {
+  display: none;
+}
+nav.open {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+nav a {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  text-decoration: none;
+  color: var(--fg);
+}
+nav a:hover, nav a:focus { background: var(--hover-bg); }
+
+/* Sections */
+section {
+  background: #0d1117;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(88, 166, 255, 0.05);
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+}
+h2 { color: var(--accent); font-size: 1.2rem; }
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  overflow-x: auto;
+  display: block;
+}
+th, td {
+  border: 1px solid var(--border);
+  padding: 0.6rem;
+  text-align: left;
+  white-space: nowrap;
+}
+tr:nth-child(even) { background: var(--alt-bg); }
+tr:hover { background: var(--hover-bg); }
+
+/* Forms */
+input, select, button {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+button {
+  background: var(--accent);
+  color: var(--bg);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+button:hover { background: #79c0ff; transform: scale(1.03); }
+input:focus, select:focus, button:focus { outline: 2px solid var(--accent); }
+
+.error { color: var(--error); font-size: 0.85rem; margin-top: 0.25rem; }
+
+/* Quick Add Button */
+#quick-add {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  box-shadow: 0 0 10px rgba(88,166,255,0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+#quick-add:hover { transform: scale(1.1); }
+
+/* Footer */
+footer {
+  border-top: 2px solid var(--border);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 1rem 0;
+}
+.status-line { color: #8b949e; font-size: 0.85rem; }
+
+/* Animations */
+@keyframes typing { from { width: 0 } to { width: 100% } }
+@keyframes blink { 50% { border-color: transparent } }
+@keyframes fadeInBody { to { opacity: 1; } }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (min-width: 600px) {
+  .menu-toggle { display: none; }
+  nav { display: block !important; }
+  body { padding: 0 2rem; }
+  main { max-width: 800px; margin: 0 auto; }
+}
+</style>
 </head>
+
 <body>
 <a href="#main-content" class="skip-link">Skip to content</a>
 
 <header>
-  <h1>Student Finance Tracker</h1>
+  <h1 class="typing">Student Finance Tracker</h1>
   <p>Track your budgets, transactions, and spending trends</p>
 </header>
 
-<nav>
+<nav role="navigation">
   <ul>
     <li><a href="#dashboard">Dashboard</a></li>
     <li><a href="#records">Transactions</a></li>
@@ -25,7 +205,7 @@
   </ul>
 </nav>
 
-<main id="main-content">
+<main id="main-content" role="main">
   <section id="dashboard">
     <h2>Dashboard</h2>
     <div class="stats">
@@ -43,11 +223,7 @@
     <table>
       <thead>
         <tr>
-          <th>Date</th>
-          <th>Description</th>
-          <th>Category</th>
-          <th>Amount</th>
-          <th>Actions</th>
+          <th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Actions</th>
         </tr>
       </thead>
       <tbody id="records-body"></tbody>
@@ -57,28 +233,24 @@
   <section id="add-form">
     <h2>Add / Edit Transaction</h2>
     <form id="transaction-form">
-      <label for="description">Description</label>
-      <input type="text" id="description" name="description" required>
-      <span class="error error-description" aria-live="polite"></span>
+      <label>Description</label>
+      <input type="text" id="description" required>
+      <span class="error error-description"></span>
 
-      <label for="amount">Amount</label>
-      <input type="number" step="0.01" id="amount" name="amount" required>
-      <span class="error error-amount" aria-live="polite"></span>
+      <label>Amount</label>
+      <input type="number" step="0.01" id="amount" required>
+      <span class="error error-amount"></span>
 
-      <label for="category">Category</label>
-      <select id="category" name="category" required>
-        <option>Food</option>
-        <option>Books</option>
-        <option>Transport</option>
-        <option>Entertainment</option>
-        <option>Fees</option>
-        <option>Other</option>
+      <label>Category</label>
+      <select id="category" required>
+        <option>Food</option><option>Books</option><option>Transport</option>
+        <option>Entertainment</option><option>Fees</option><option>Other</option>
       </select>
-      <span class="error error-category" aria-live="polite"></span>
+      <span class="error error-category"></span>
 
-      <label for="date">Date</label>
-      <input type="date" id="date" name="date" required>
-      <span class="error error-date" aria-live="polite"></span>
+      <label>Date</label>
+      <input type="date" id="date" required>
+      <span class="error error-date"></span>
 
       <button type="submit">Save</button>
     </form>
@@ -87,10 +259,10 @@
   <section id="settings">
     <h2>Settings</h2>
     <form id="settings-form">
-      <label for="cap">Set Monthly Cap</label>
+      <label>Set Monthly Cap</label>
       <input type="number" id="cap" step="0.01">
 
-      <label for="currency">Currency</label>
+      <label>Currency</label>
       <select id="currency">
         <option value="ZMW">ZMW</option>
         <option value="USD">USD</option>
@@ -109,60 +281,81 @@
   <section id="about">
     <h2>About</h2>
     <p>Purpose: Track student spending and budgets.</p>
-    <p>Contact: <a href="mailto:e.mulilo1@alustudent.com">Email</a> | <a href="https://github.com/ephraimm-zm" target="_blank">GitHub</a></p>
+    <p>Contact: <a href="mailto:e.mulilo1@alustudent.com">Email</a> | 
+    <a href="https://github.com/ephraimm-zm" target="_blank">GitHub</a></p>
   </section>
 </main>
 
 <footer>
-  <p>&copy; Ephraims Student Finance Tracker</p>
+  <p>&copy; Ephraim’s Student Finance Tracker</p>
+  <p class="status-line">-- NORMAL MODE --</p>
 </footer>
 
-<script type="module" src="scripts/ui.js"></script>
+<button id="quick-add" aria-label="Quick Add">＋</button>
+
 <script>
-  // ====== Mobile Nav Toggle ======
-  const nav = document.querySelector("nav");
-  const menuBtn = document.createElement("button");
-  menuBtn.textContent = "☰ Menu";
-  menuBtn.className = "menu-toggle";
-  menuBtn.setAttribute("aria-expanded", "false");
-  nav.before(menuBtn);
+/* ====== Mobile Nav Toggle ====== */
+const nav = document.querySelector("nav");
+const menuBtn = document.createElement("button");
+menuBtn.textContent = "☰ Menu";
+menuBtn.className = "menu-toggle";
+menuBtn.setAttribute("aria-expanded", "false");
+nav.before(menuBtn);
+menuBtn.addEventListener("click", () => {
+  const expanded = menuBtn.getAttribute("aria-expanded") === "true";
+  menuBtn.setAttribute("aria-expanded", String(!expanded));
+  nav.classList.toggle("open");
+});
 
-  menuBtn.addEventListener("click", () => {
-    const expanded = menuBtn.getAttribute("aria-expanded") === "true";
-    menuBtn.setAttribute("aria-expanded", String(!expanded));
-    nav.classList.toggle("open");
-  });
-
-  // ====== Smooth Scroll for Internal Links ======
-  document.querySelectorAll('a[href^="#"]').forEach(link => {
-    link.addEventListener("click", e => {
-      e.preventDefault();
-      const target = document.querySelector(link.getAttribute("href"));
-      if (target) target.scrollIntoView({ behavior: "smooth" });
-      if (window.innerWidth < 600) {
-        nav.classList.remove("open");
-        menuBtn.setAttribute("aria-expanded", "false");
-      }
-    });
-  });
-
-  // ====== Simple Input Feedback ======
-  document.querySelectorAll("input, select").forEach(el => {
-    el.addEventListener("focus", () => el.style.borderColor = "#58a6ff");
-    el.addEventListener("blur", () => el.style.borderColor = "#30363d");
-  });
-
-  // ====== Keyboard Focus Hint (Vim-like flash) ======
-  window.addEventListener("keydown", e => {
-    if (e.key === "Escape") {
-      document.body.classList.toggle("focus-hint");
-      setTimeout(() => document.body.classList.remove("focus-hint"), 150);
+/* ====== Smooth Scroll ====== */
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+  link.addEventListener("click", e => {
+    e.preventDefault();
+    const target = document.querySelector(link.getAttribute("href"));
+    if (target) target.scrollIntoView({ behavior: "smooth" });
+    if (window.innerWidth < 600) {
+      nav.classList.remove("open");
+      menuBtn.setAttribute("aria-expanded", "false");
     }
   });
-</script>
+});
 
+/* ====== Vim-Mode Status Line ====== */
+window.addEventListener("keydown", e => {
+  const status = document.querySelector(".status-line");
+  if (e.key === "i") status.textContent = "-- INSERT MODE --";
+  if (e.key === "Escape") status.textContent = "-- NORMAL MODE --";
+});
+
+/* ====== Quick Add Button ====== */
+document.getElementById("quick-add").addEventListener("click", () => {
+  document.querySelector("#add-form").scrollIntoView({ behavior: "smooth" });
+});
+
+/* ====== Chart.js Terminal Style ====== */
+const ctx = document.getElementById('trend-chart');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+    datasets: [{
+      label: 'Spending',
+      data: [30, 70, 45, 90, 40, 65, 80],
+      borderColor: '#58a6ff',
+      backgroundColor: 'rgba(88,166,255,0.1)',
+      tension: 0.3,
+      pointRadius: 3,
+      pointBackgroundColor: '#79c0ff'
+    }]
+  },
+  options: {
+    plugins: { legend: { labels: { color: '#c9d1d9' } } },
+    scales: {
+      x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+      y: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+    }
+  }
+});
+</script>
 </body>
 </html>
-
-
-
