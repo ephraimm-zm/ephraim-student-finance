@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Finance Tracker</title>
-  <link rel="stylesheet" href="styles/main.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Finance Tracker</title>
+<link rel="stylesheet" href="styles/main.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to content</a>
@@ -13,10 +13,9 @@
 <header>
   <h1>Student Finance Tracker</h1>
   <p>Track your budgets, transactions, and spending trends</p>
-  <button id="menu-toggle" aria-label="Toggle navigation">☰</button>
 </header>
 
-<nav id="navbar">
+<nav>
   <ul>
     <li><a href="#dashboard">Dashboard</a></li>
     <li><a href="#records">Transactions</a></li>
@@ -34,7 +33,7 @@
       <div>Total Amount: <span id="total-amount">0.00</span></div>
       <div>Top Category: <span id="top-category">N/A</span></div>
       <div>Cap Remaining: <span id="cap-remaining">0.00</span></div>
-      <canvas id="trend-chart" width="400" height="200" aria-label="Spending trend"></canvas>
+      <canvas id="trend-chart" width="400" height="200" aria-label="Last 7 days spending trend"></canvas>
     </div>
   </section>
 
@@ -60,11 +59,11 @@
     <form id="transaction-form">
       <label for="description">Description</label>
       <input type="text" id="description" name="description" required>
-      <span class="error error-description"></span>
+      <span class="error error-description" aria-live="polite"></span>
 
       <label for="amount">Amount</label>
       <input type="number" step="0.01" id="amount" name="amount" required>
-      <span class="error error-amount"></span>
+      <span class="error error-amount" aria-live="polite"></span>
 
       <label for="category">Category</label>
       <select id="category" name="category" required>
@@ -75,11 +74,11 @@
         <option>Fees</option>
         <option>Other</option>
       </select>
-      <span class="error error-category"></span>
+      <span class="error error-category" aria-live="polite"></span>
 
       <label for="date">Date</label>
       <input type="date" id="date" name="date" required>
-      <span class="error error-date"></span>
+      <span class="error error-date" aria-live="polite"></span>
 
       <button type="submit">Save</button>
     </form>
@@ -110,16 +109,59 @@
   <section id="about">
     <h2>About</h2>
     <p>Purpose: Track student spending and budgets.</p>
-    <p>Contact: <a href="mailto:e.mulilo1@alustudent.com">Email</a> | 
-      <a href="https://github.com/ephraimm-zm" target="_blank">GitHub</a></p>
+    <p>Contact: <a href="mailto:e.mulilo1@alustudent.com">Email</a> | <a href="https://github.com/ephraimm-zm" target="_blank">GitHub</a></p>
   </section>
 </main>
 
 <footer>
-  <p>&copy; Ephraim’s Student Finance Tracker</p>
-  <div class="status-line">-- NORMAL MODE --</div>
+  <p>&copy; Ephraims Student Finance Tracker</p>
 </footer>
 
-<script src="scripts/ui.js"></script>
+<script type="module" src="scripts/ui.js"></script>
+<script>
+  // ====== Mobile Nav Toggle ======
+  const nav = document.querySelector("nav");
+  const menuBtn = document.createElement("button");
+  menuBtn.textContent = "☰ Menu";
+  menuBtn.className = "menu-toggle";
+  menuBtn.setAttribute("aria-expanded", "false");
+  nav.before(menuBtn);
+
+  menuBtn.addEventListener("click", () => {
+    const expanded = menuBtn.getAttribute("aria-expanded") === "true";
+    menuBtn.setAttribute("aria-expanded", String(!expanded));
+    nav.classList.toggle("open");
+  });
+
+  // ====== Smooth Scroll for Internal Links ======
+  document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener("click", e => {
+      e.preventDefault();
+      const target = document.querySelector(link.getAttribute("href"));
+      if (target) target.scrollIntoView({ behavior: "smooth" });
+      if (window.innerWidth < 600) {
+        nav.classList.remove("open");
+        menuBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+  });
+
+  // ====== Simple Input Feedback ======
+  document.querySelectorAll("input, select").forEach(el => {
+    el.addEventListener("focus", () => el.style.borderColor = "#58a6ff");
+    el.addEventListener("blur", () => el.style.borderColor = "#30363d");
+  });
+
+  // ====== Keyboard Focus Hint (Vim-like flash) ======
+  window.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      document.body.classList.toggle("focus-hint");
+      setTimeout(() => document.body.classList.remove("focus-hint"), 150);
+    }
+  });
+</script>
+
 </body>
 </html>
+
+
